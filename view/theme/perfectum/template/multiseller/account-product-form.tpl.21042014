@@ -1,0 +1,299 @@
+<?php echo $header; ?><?php echo $column_left; ?><?php echo $column_right; ?>
+<script type="text/javascript">
+	function showCombos() {
+		document.getElementsByClassName('ms-product-left')[0].style.width='100%';
+		document.getElementById('tab-general').style.display='none';
+		document.getElementById('ms-product-right').style.display='none';
+		document.getElementById('tab-combos').style.display='block';
+	}
+	
+	function hideCombos() {
+		document.getElementsByClassName('ms-product-left')[0].style.width='60%';
+		document.getElementById('tab-combos').style.display='none';
+		document.getElementById('tab-general').style.display='block';
+		document.getElementById('ms-product-right').style.display='inline-block';
+	}
+</script>
+
+<div id="accountstart">
+   <img src="image/data/background/manzonnebril.jpg" style="max-width: 100%;">
+</div>
+
+<div id="contentseller" class="ms-account-product-form">
+	<?php echo $content_top; ?>
+
+	<div class="breadcrumb">
+		<?php foreach ($breadcrumbs as $breadcrumb) { ?>
+		<?php echo $breadcrumb['separator']; ?><a href="<?php echo $breadcrumb['href']; ?>"><?php echo $breadcrumb['text']; ?></a>
+		<?php } ?>
+	</div>
+
+	<h1><?php echo $heading; ?></h1>
+
+	<p class="warning main"></p>
+	<div class="content">
+
+	<div class="ms-product-left">
+
+	    <form id="ms-new-product" method="post" enctype="multipart/form-data">
+
+		<!-- general tab -->
+		<div id="tab-general">
+			<input type="hidden" name="product_id" value="<?php echo $product['product_id']; ?>" />
+			<input type="hidden" name="keyword" value="" />
+			<input type="hidden" name="action" id="ms_action" />
+			<input type="hidden" name="list_until" value="<?php echo $list_until; ?>" />
+			<table class="ms-product-required">
+				<tr>
+					<td colspan="2"><h3><?php echo $ms_account_product_input; ?></h3></td>
+				</tr>
+				<tr>
+					<td>
+                                           <?php echo $entry_ean; ?><span class="faq fa-question tooltip" titlett="Vul hier de ISBN-13 of EAN code van het boek in"></span>
+                                        </td>
+					<td>
+                                           <?php if (!isset($product['product_id']) || empty($product['product_id'])) { ?>
+                                              <input type="text" name="product_ean" value="<?php echo $product['ean']; ?>" />
+                                              <p class="error" id="error_product_ean"></p>
+                                           <?php } else { ?>
+                                              <?php echo $product['ean']; ?>
+                                              <p></p>
+                                           <?php } ?>
+                                        </td>
+				</tr>
+                                <?php if (!isset($product['product_id']) || empty($product['product_id'])) { ?>
+				<tr>
+					<td><?php echo $entry_legal; ?></td>
+					<td><input type="checkbox" name="product_legal" /><p class="error" id="error_product_legal"></p></td>
+				</tr>
+                                <?php } ?>
+				<tr>
+					<td><?php echo $ms_account_product_price; ?></td>
+					<td><input type="text" name="product_price" value="<?php echo $product['price']; ?>"><p class="error" id="error_product_price"></p></td>
+				</tr>
+				<tr>
+					<td><?php echo $ms_account_product_add_combo; ?></td>
+					<td><a href="javascript:showCombos()" class="button">
+						<span><?php echo $ms_button_add_combos; ?></span>
+					</a></td>
+				</tr>
+				<tr>
+					<td><?php echo $ms_account_product_category; ?></td>
+					<td><?php if (!$msconf_allow_multiple_categories) { ?><select name="product_category">
+						<?php foreach ($categories as $category) { ?>
+                                                   <?php if ($category['parent_id'] > 0) { ?>
+						<option value="<?php echo $category['category_id']; ?>" <?php if (in_array($category['category_id'], explode(',',$product['category_id'])) && !$category['disabled']) { ?>selected="selected"<?php } ?> <?php echo ($category['disabled'] ? 'disabled' : ''); ?>><?php echo trim($category['name']); ?></option>
+						   <?php }//display all cats except for the root ?>
+						<?php } ?>
+					</select>
+					<?php } else { ?>
+					<div class="scrollbox">
+						<?php $class = 'odd'; ?>
+							<?php foreach ($categories as $category) { ?>
+							<?php $class = ($class == 'even' ? 'odd' : 'even'); ?>
+							<div class="<?php echo $class; ?> <?php echo ($category['disabled'] ? 'disabled' : ''); ?>">
+								<input type="checkbox" name="product_category[]" value="<?php echo $category['category_id']; ?>" <?php if (in_array($category['category_id'], explode(',',$product['category_id'])) && !$category['disabled']) { ?>checked="checked"<?php } ?> <?php if ($category['disabled']) { ?>disabled="disabled"<?php } ?>/>
+								<?php echo $category['name']; ?>
+							</div>
+						<?php }//end for each ?>
+					</div>
+
+					   <?php } ?>
+
+					<p class="error" id="error_product_category"></p>
+					</td>
+				</tr>
+				<tr>
+					<td>
+                                           <?php if ($msconf_downloads_limits[0] > 0) { ?><?php } ?> <?php echo $ms_account_product_download; ?><span class="faq fa-question tooltip" titlett="<?php echo $ms_account_product_download_note ?>"></span></td>
+				<td>
+                                   <?php if (!isset($product['product_id']) || empty($product['product_id'])) { ?>
+					<!--<input type="file" name="ms-file-addfiles" id="ms-file-addfiles" />-->
+					<a name="ms-file-addfiles" id="ms-file-addfiles" class="button"><span><?php echo $ms_button_select_files; ?></span></a>
+						<div class="error" id="error_product_download"></div>
+						<div class="download progress"></div>
+						<div class="product_download_files">
+						<?php if (isset($product['downloads'])) { ?>
+							<?php $i = 0; ?>
+							<?php foreach ($product['downloads'] as $download) { ?>
+								<div class="ms-download">
+								<input type="hidden" name="product_downloads[<?php echo $i; ?>][download_id]" value="<?php echo $download['id']; ?>" />
+								<input type="hidden" name="product_downloads[<?php echo $i; ?>][filename]" value="" />
+								<div class="ms-download-name"><?php echo $download['name']; ?></div>
+								<div class="ms-buttons">
+									<a class="ms-button-delete" title="<?php echo $ms_delete; ?>"></a>
+								</div>
+								</div>
+							<?php $i++; ?>
+							<?php } ?>
+						<?php } ?>
+						</div>
+
+                                   <?php } else { ?>
+                                        <?php if (isset($product['downloads'])) { ?>
+                                                 <?php foreach ($product['downloads'] as $download) { ?>
+                                                      <a href="<?php echo $download['href']; ?>" class="ms-button-download" title="<?php echo $ms_download; ?>"><div class="ms-download"><?php echo $download['name']; ?></div></a>
+                                                 <?php } ?>
+                                         <?php } ?>
+                                   <?php } ?>
+				   </td>
+				</tr>
+			</table>
+			<div class="buttons">
+				<div class="left">
+					<a href="<?php echo $back; ?>" class="button">
+						<span><?php echo $ms_button_cancel; ?></span>
+					</a>
+				</div>
+				<div class="right">
+					<a class="button" id="ms-submit-button">
+						<span><?php echo $ms_button_submit; ?></span>
+					</a>
+				</div>
+			</div>
+		</div>
+		
+		<div id="tab-combos" style="display: none;">
+		<br />
+                     <table class="list">
+                     <thead>
+                         <tr>
+                            <td><?php echo $ms_account_product_priority; ?></td>
+                            <td><?php echo $ms_account_product_price; ?></td>
+                            <td><?php echo $ms_account_product_other_items; ?></td>
+                            <td><?php echo $ms_account_product_date_start; ?></td>
+                            <td><?php echo $ms_account_product_date_end; ?></td>
+                            <td></td>
+                         </tr>
+                     </thead>
+                     <tbody>
+
+                         <!-- sample row -->
+                         <tr class="ffSample">
+                            <td><input type="text" name="product_combos[0][priority]" value="" size="2" /></td>
+                            <td><input type="text" name="product_combos[0][price]" value="" /></td>
+                            <td><select multiple name="product_combos[0][combo_products][]">
+                            <?php foreach($owned_products as $prod) {
+                                    echo intval($prod['product_id']) != intval($product['product_id']) ? '<option value="' . $prod['product_id'] . '">' . $prod['pd.name'] . '</option>' : '';
+                            }?>
+                            </select>
+                            </td>
+                            <td><input type="text" name="product_combos[0][date_start]" value="" class="date" /></td>
+                            <td><input type="text" name="product_combos[0][date_end]" value="" class="date" /></td>
+                            <td><a class="ms-button-delete" title="<?php echo $ms_delete; ?>"></a></td>
+                         </tr>
+
+                         <?php if (isset($product['combos'])) { ?>
+                         <?php $combo_rows = 1; ?>
+                         <?php foreach ($product['combos'] as $product_combos) { ?>
+                         <tr>
+                            <td><input type="text" name="product_combos[<?php echo $combo_rows; ?>][priority]" value="<?php echo $product_combos['priority']; ?>" size="2" /></td>
+                            <td><input type="text" name="product_combos[<?php echo $combo_rows; ?>][price]" value="<?php echo $product_combos['price']; ?>" /></td>
+                            <td><select multiple name="product_combos[<?php echo $combo_rows; ?>][combo_products][]">
+                            <?php foreach($owned_products as $prod) {
+                                    echo intval($prod['product_id']) != intval($product['product_id']) ? ((in_array(intval($prod['product_id']), $product_combos['combo_product_id'])) ? '<option selected value="' . $prod['product_id'] . '">' . $prod['pd.name'] . '</option>' : '<option value="' . $prod['product_id'] . '">' . $prod['pd.name'] . '</option>') : '';
+                            }?>
+                            </select>
+                            </td>
+                            <td><input type="text" name="product_combos[<?php echo $combo_rows; ?>][date_start]" value="<?php echo $product_combos['date_start']; ?>" class="date" /></td>
+                            <td><input type="text" name="product_combos[<?php echo $combo_rows; ?>][date_end]" value="<?php echo $product_combos['date_end']; ?>" class="date" /></td>
+                            <td><a class="ms-button-delete" title="<?php echo $ms_delete; ?>"></a></td>
+                         </tr>
+                         <?php $combo_rows++; ?>
+                         <?php } ?>
+                         <?php } ?>
+                         </tbody>
+
+                         <tfoot>
+                         <tr>
+                         <td colspan="5"><a class="button ffClone"><?php echo $ms_button_add_combo; ?></a></td>
+                         </tr>
+                         </tfoot>
+                     </table>
+
+		     <div class="buttons">
+			<div class="left">
+		           <a href="javascript:hideCombos();" class="button">
+				<span><?php echo $ms_button_go_back_to_form; ?></span>
+			   </a>
+				</div>
+			</div>
+		</div>
+	</div> <!-- ms-product-left -->
+
+	</form>
+
+	        <div id="ms-product-right">
+		<table class="ms-product-retrieved">
+		    <tr>
+			<td><b><?php echo $ms_account_product_name . ':'; ?></b></td>
+			<td id="product_name"><?php echo $product['model'];?></td>
+		    </tr>
+					<tr>
+						<td><b><?php echo $entry_author; ?></b></td>
+			                        <td id="product_author"><?php echo $product['authorstring'] ?></td>
+					</tr>
+		   
+					<tr>
+						<td><b><?php echo $entry_book_language; ?></b></td>
+						<td id="product_language"><?php echo $product['book_language'] ?></td>
+					</tr>
+					<tr>
+						<td><b><?php echo $entry_page; ?></b></td>
+						<td id="product_page"><?php echo $product['page'] ?></td>
+					</tr>
+					<tr>
+						 <td><b><?php echo $entry_date_published; ?></b></td>
+						 <td id="product_datepublished"><?php echo $product['date_published'] ?></td>
+					</tr>
+					<tr>
+						 <td><b><?php echo $entry_preferred_price; ?></b></td>
+						 <td id="product_preferred_price"><?php echo $product['book_language'] ?></td>
+					</tr>
+		    <tr>
+			<td colspan="2"><b><?php echo $ms_account_product_description; ?>:</b></td>
+		    </tr>
+		    <tr>
+			<td colspan="2" id="product_description"><?php echo $product['languages'][$this->config->get('config_language_id')]['description'] ?> </td>
+		    <tr>
+		    <?php if($product['product_cover_images']): ?>
+		        <?php foreach($product['product_cover_images'] as $img){ ?>
+                <td>
+                    <img src=" <?php echo "image/" . $img['image']; ?>" class="productimage" />
+                </td>
+                <?php } ?>
+		    <?php else: ?>
+			<td>
+                        <img id="productimage1" src="" class="productimage" />
+                        </td>
+			<td>
+                        <img id="productimage2" src="" class="productimage" />
+                        </td>
+		    <?php endif; ?>
+		    </tr>
+
+		</table>
+			</div> <!-- ms-product-right -->
+		</div>
+
+	<?php echo $content_bottom; ?>
+</div>
+
+<?php $timestamp = time(); ?>
+<script>
+	var msGlobals = {
+		timestamp: '<?php echo $timestamp; ?>',
+		token : '<?php echo md5($salt . $timestamp); ?>',
+		session_id: '<?php echo session_id(); ?>',
+		product_id: '<?php echo $product['product_id']; ?>',
+		button_generate: '<?php echo htmlspecialchars($ms_button_generate, ENT_QUOTES, "UTF-8"); ?>',
+		text_delete: '<?php echo htmlspecialchars($ms_delete, ENT_QUOTES, "UTF-8"); ?>',
+		uploadError: '<?php echo htmlspecialchars($ms_error_file_upload_error, ENT_QUOTES, "UTF-8"); ?>',
+		formError: '<?php echo htmlspecialchars($ms_error_form_submit_error, ENT_QUOTES, "UTF-8"); ?>',
+		formNotice: '<?php echo htmlspecialchars($ms_error_form_notice, ENT_QUOTES, "UTF-8"); ?>',
+		config_enable_rte: '<?php echo $this->config->get('msconf_enable_rte'); ?>'
+	};
+</script>
+
+<div style="clear:both; content:''"></div>
+<?php echo $footer; ?>

@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+RewriteEngine on
+
+# You may need RewriteBase on some servers, don't recommended if your store are in a subfolder (ie: /store)
+RewriteBase /catalog/view/min
+
+# rewrite URLs like "/min/f=..." to "/min/?f=..."
+RewriteRule ^([f]=.*)  index.php?$1 [L,NE]
+</IfModule>
+<IfModule mod_env.c>
+# In case AddOutputFilterByType has been added
+#SetEnv no-gzip
+</IfModule>

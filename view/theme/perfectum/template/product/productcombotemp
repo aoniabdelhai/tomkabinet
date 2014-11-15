@@ -1,0 +1,55 @@
+foreach ($combodeals as $deal) {
+                              $oldprice = 0;
+                        ?>
+                        <div class="combodeal">
+                        <table width="100%">
+                           <tr>
+                               <td width="85%">
+                        <?php foreach ($deal['items'] as $other_item) {
+                                        $product_info = $this->model_catalog_product->getProduct($other_item);
+                                        if ($product_info['image'] && $product_info['product_id'] != $product_id_combo) {
+                                                echo '<a href="' . $this->url->link('product/product', 'product_id=' . $product_info['product_id']) . '"><img src="' . $this->model_tool_image->resize($product_info['image'], 38, 50) . '" style="padding:6px;" /></a>';
+                                        }
+                                        $oldprice += $product_info['price'];
+                                }
+                         ?>
+                                </td>
+                                <td>
+                                   <div class="combopricelabel">
+                                      <div class="combopricesale"><del>€ <?php round($oldprice, 2) ?> </del> € <?php round($deal['price'], 2) ?></div>
+                                   </div>
+                                </td>
+                              </tr>
+                              <tr>
+                                 <td>Bestel dit product nu in combinatie met
+                              <?php
+                                  $i = 0;
+                                  foreach ($deal['items'] as $other_item) {
+                                        $product_info = $this->model_catalog_product->getProduct($other_item);
+
+                                        if ($product_info['product_id'] == $product_id_combo) {
+                                                continue;
+                                        }
+
+                                        if ($i == count($deal['items']) - 2) {
+                                   ?>
+                                        <a href="<?php $this->url->link('product/product', 'product_id=' . $product_info['product_id']) ?>"> <?php $product_info['name'] ?> </a>
+                                        <?php } else if ($i == count($deal['items']) - 3) { ?>
+                                        <a href="<?php $this->url->link('product/product', 'product_id=' . $product_info['product_id']) ?>"> <?php $product_info['name'] ?> </a> en
+                                        <?php } else { ?>
+                                        <a href="<?php $this->url->link('product/product', 'product_id=' . $product_info['product_id']) ?>"> <?php $product_info['name'] ?></a>,
+                                <?php }
+                                        $i++;
+                                } ?>
+
+                                      en bespaar <?php round($oldprice - $deal['price'], 2) ?> euro!
+                                   </td>
+                                   <td>
+                                <a href="javascript:addBundle('<?php implode(',', $deal['items']) ?>')" class="button">Kopen</a>
+                                </tr>
+
+                                </table>
+                                </div>
+                        <?php } ?>
+
+
