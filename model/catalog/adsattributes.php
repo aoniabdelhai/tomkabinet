@@ -112,17 +112,14 @@ class ModelCatalogAdsattributes extends Model
             return false;
         }
     }
-
     public function getProducts($data = array())
     {
         $customer_group_id = $this->config->get('config_customer_group_id');
 
         if ($this->customer->isLogged())
-        {
             $customer_group_id = $this->customer->getCustomerGroupId();
-        }
 
-        $sql = "SELECT p.product_id,
+        $sql = "SELECT SQL_CALC_FOUND_ROWS p.product_id,
 		          (SELECT AVG(rating) AS total FROM " . DB_PREFIX . "review r1 WHERE r1.product_id = p.product_id AND r1.status = '1' GROUP BY r1.product_id) AS rating
 			    FROM " . DB_PREFIX . "product p
 			    LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id)
@@ -162,37 +159,34 @@ class ModelCatalogAdsattributes extends Model
         {
             $sql .= " AND a.attribute_id = '" . (int) $data['filter_attribute'] . "'";
         }
-
-
-
-
         if (isset($data['quicksearch']) && $data['quicksearch'] == 1)
         {
-            $sql.=" AND MATCH(atd.name) AGAINST('{$this->db->escape(mb_strtolower($data['filter_author'], 'utf-8'))}') OR  MATCH(pd.name) AGAINST('{$this->db->escape(mb_strtolower($data['filter_author'], 'utf-8'))}')";
+            $sql.=" AND MATCH(atd.name) AGAINST('{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE) OR  MATCH(pd.name) AGAINST('{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE)";
             //$sql .= " AND ((LCASE(atd.name) LIKE '%" . $this->db->escape(mb_strtolower($data['filter_author'], 'utf-8')) . "%') OR  (LCASE(pd.name) LIKE '%" . $this->db->escape(mb_strtolower($data['filter_name'], 'utf-8')) . "%')) ";
         } else
         {
 
-            if (isset($data['filter_author']) && $data['filter_author'])
+            if (isset($data['filter_author']) && !empty($data['filter_author']))
             {
-                $sql .= " AND LCASE(atd.name) LIKE '%" . $this->db->escape(mb_strtolower($data['filter_author'], 'utf-8')) . "%'";
+                $sql.=" AND MATCH(atd.name) AGAINST('{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE)";
+                //$sql .= " AND LCASE(atd.name) LIKE '%" . $this->db->escape(mb_strtolower($data['filter_author'], 'utf-8')) . "%'";
             }
 
             if (isset($data['filter_name']) && $data['filter_name'])
             {
                 if (isset($data['filter_description']) && $data['filter_description'])
                 {
-                    $sql .= " AND MATCH(pd.name) AGAINST('{$this->db->escape(mb_strtolower($data['filter_name'], 'utf-8'))}')
-					    OR LCASE(pd.description) LIKE '%" . $this->db->escape(mb_strtolower($data['filter_name'], 'utf-8')) . "%')";
+                    $sql .= " AND MATCH(pd.name) AGAINST('{$this->db->escape($data['filter_name'])}')
+					    OR MATCH(pd.description) AGAINST('{$this->db->escape($data['filter_name'])}'))";
                 } else
                 {
-                    $sql .= " AND MATCH(pd.name) AGAINST('{$this->db->escape(mb_strtolower($data['filter_name'], 'utf-8'))}')";
+                    $sql .= " AND MATCH(pd.name) AGAINST('{$this->db->escape($data['filter_name'])}')";
                 }
             }
 
             if (isset($data['filter_title']) && $data['filter_title'])
             {
-                $sql .= " AND MATCH(pd.name) AGAINST('{$this->db->escape(mb_strtolower($data['filter_title'], 'utf-8'))}')";
+                $sql .= " AND MATCH(pd.name) AGAINST('{$this->db->escape($data['filter_title'])}')";
             }
         }
 
@@ -304,16 +298,224 @@ class ModelCatalogAdsattributes extends Model
         }
 
         $product_data = array();
-        //echo "<pre>";
-        //echo $sql;
-        //echo "</pre>";
         $query = $this->db->query($sql);
 
         foreach ($query->rows as $result) {
             $product_data[$result['product_id']] = $this->getProduct($result['product_id']);
         }
+        
 
         return $product_data;
+    }
+    public function getRecords($data = array())
+    {
+        $customer_group_id = $this->config->get('config_customer_group_id');
+
+        if ($this->customer->isLogged())
+            $customer_group_id = $this->customer->getCustomerGroupId();
+
+        $sql = "SELECT SQL_CALC_FOUND_ROWS p.product_id,count(*) as book_count, min(p.price) as min_price,max(p.price) as max_price,
+		          (SELECT AVG(rating) AS total FROM " . DB_PREFIX . "review r1 WHERE r1.product_id = p.product_id AND r1.status = '1' GROUP BY r1.product_id) AS rating
+			    FROM " . DB_PREFIX . "product p
+			    LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id)
+			    LEFT JOIN " . DB_PREFIX . "product_to_store p2s ON (p.product_id = p2s.product_id) ";
+
+        if ((!empty($data['filter_groups']) AND $data['filter_groups'] != '') OR ( !empty($data['filter_attribute']) AND $data['filter_attribute'] != ''))
+        {
+            $sql .= "  LEFT JOIN " . DB_PREFIX . "product_attribute pa ON (pa.product_id = p.product_id)
+		               LEFT JOIN " . DB_PREFIX . "attribute a ON (a.attribute_id = pa.attribute_id)
+		               LEFT JOIN " . DB_PREFIX . "attribute_group ag ON (ag.attribute_group_id = a.attribute_group_id)";
+        }
+
+        if (!empty($data['filter_author']) AND $data['filter_author'] != '')
+        {
+            $sql .= "  LEFT JOIN " . DB_PREFIX . "product_to_author pta ON (p.product_id = pta.product_id)
+		               LEFT JOIN " . DB_PREFIX . "author auth ON (pta.author_id = auth.author_id)
+		               LEFT JOIN " . DB_PREFIX . "author_description atd ON (auth.author_id = atd.author_id)";
+        }
+
+        $sql .= " WHERE p.image <>'' AND pd.language_id = '" . (int) $this->config->get('config_language_id') . "'";
+
+        if ((!empty($data['filter_groups']) AND $data['filter_groups'] != '') OR ( !empty($data['filter_attribute']) AND $data['filter_attribute'] != ''))
+        {
+            $sql .= " AND  pa.language_id = '" . (int) $this->config->get('config_language_id') . "'";
+        }
+        $sql .= " AND p.status = '1'
+			 AND p.date_available <= NOW()
+			 AND p2s.store_id = '" . (int) $this->config->get('config_store_id') . "'";
+
+
+        if (!empty($data['filter_groups']) AND $data['filter_groups'] != '')
+        {
+            $sql .= " AND ag.attribute_group_id = '" . (int) $data['filter_groups'] . "'";
+        }
+
+        if (!empty($data['filter_attribute']) AND $data['filter_attribute'] != '')
+        {
+            $sql .= " AND a.attribute_id = '" . (int) $data['filter_attribute'] . "'";
+        }
+
+
+
+
+        if (isset($data['quicksearch']) && $data['quicksearch'] == 1)
+        {
+            if (strlen($data['filter_author']) > 3)
+            {
+                //$data['filter_author'] = str_ireplace(' ', ' +', $data['filter_author']);
+
+                $sql.=" AND MATCH(atd.name) AGAINST('+{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE) OR  MATCH(pd.name) AGAINST('+{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE)";
+            } else
+            {
+                $sql .= " AND ((LCASE(pd.name) LIKE '" . $this->db->escape(mb_strtolower($data['filter_author'], 'utf-8')) . "%'))";
+            }
+        } else
+        {
+
+            if (isset($data['filter_author']) && $data['filter_author'])
+            {
+                $sql.=" AND MATCH(atd.name) AGAINST('+{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE)";
+                //$sql .= " AND LCASE(atd.name) LIKE '%" . $this->db->escape(mb_strtolower($data['filter_author'], 'utf-8')) . "%'";
+            }
+
+            if (isset($data['filter_name']) && $data['filter_name'])
+            {
+                if (isset($data['filter_description']) && $data['filter_description'])
+                {
+                    $sql .= " AND MATCH(pd.name) AGAINST('+{$this->db->escape($data['filter_name'])}' IN BOOLEAN MODE)
+					    OR MATCH(pd.description) AGAINST('+{$this->db->escape($data['filter_name'])}' IN BOOLEAN MODE))";
+                } else
+                {
+                    $sql .= " AND MATCH(pd.name) AGAINST('+{$this->db->escape($data['filter_name'])}' IN BOOLEAN MODE)";
+                }
+            }
+
+            if (isset($data['filter_title']) && $data['filter_title'])
+            {
+                $sql .= " AND MATCH(pd.name) AGAINST('+{$this->db->escape($data['filter_title'])}' IN BOOLEAN MODE)";
+            }
+        }
+
+        //=============================================
+        if (isset($data['filter_category_id']) && $data['filter_category_id'])
+        {
+            if ($data['filter_category_id'] == 0)
+                $data['filter_sub_category'] = true;
+            if ($data['filter_sub_category'] == 'true')
+            {
+                $implode_data = array();
+                $categories = $this->getCategoriesByParentId($data['filter_category_id']);
+                $implode_data = implode(',', $categories);
+            } else
+            {
+                $implode_data = implode(',', array('0' => $data['filter_category_id']));
+            }
+            //=============================================
+
+            if (isset($data['filter_category_id']) && $data['filter_category_id'])
+            {
+                $sql .= " AND p.product_id IN (SELECT p2c.product_id FROM " . DB_PREFIX . "product_to_category p2c WHERE  p2c.category_id IN(" . $implode_data . "))";
+            } else
+            {
+                $sql .= " AND p.product_id IN (SELECT p2c.product_id FROM " . DB_PREFIX . "product_to_category p2c WHERE p2c.category_id = '" . (int) $data['filter_category_id'] . "')";
+            }
+        }
+
+        if (isset($data['filter_language']) && $data['filter_language'])
+        {
+            $sql .= " AND LCASE(p.book_language) = '" . $this->db->escape(mb_strtolower($data['filter_language'], 'utf-8')) . "'";
+        }
+
+        if (isset($data['filter_isbn']) && $data['filter_isbn'])
+        {
+            $sql .= " AND LCASE(p.isbn) = '" . $this->db->escape(mb_strtolower($data['filter_isbn'], 'utf-8')) . "'";
+        }
+
+        if (isset($data['filter_pricemin']) && $data['filter_pricemin'])
+        {
+            $sql .= " AND p.price >= '" . (int) $data['filter_pricemin'] . "'";
+        }
+
+        if (isset($data['filter_pricemax']) && $data['filter_pricemax'])
+        {
+            $sql .= " AND p.price <= '" . (int) $data['filter_pricemax'] . "'";
+        }
+
+        if ($this->config->get("searchat_viewproduct") != '')
+        {
+            $sql .= " AND p.stock_status_id <> '" . (int) $this->config->get("searchat_viewproduct") . "'";
+        }
+
+        $sort_data = array(
+            'pd.name',
+            'p.title',
+            'p.author',
+            'p.isbn',
+            'p.quantity',
+            'p.price',
+            'rating',
+            'p.sort_order',
+            'p.date_added',
+            'RAND()'
+        );
+        $sql .=' GROUP BY pd.name';
+        if (isset($data['sort']) && in_array($data['sort'], $sort_data))
+        {
+            if ($data['sort'] == 'pd.name' || $data['sort'] == 'p.model')
+            {
+                $sql .= " ORDER BY LCASE(" . $data['sort'] . ")";
+            } else
+            {
+                $sql .= " ORDER BY " . $data['sort'];
+            }
+        }
+
+
+
+        if (isset($data['order']) && ($data['order'] == 'DESC'))
+        {
+            $sql .= " DESC";
+        } 
+
+        if (isset($data['start']) || isset($data['limit']))
+        {
+            if ($data['start'] < 0)
+            {
+                $data['start'] = 0;
+            }
+
+            if ($data['limit'] < 1)
+            {
+                $data['limit'] = 20;
+            }
+
+            $sql .= " LIMIT " . (int) $data['start'] . "," . (int) $data['limit'];
+        }
+
+        if (isset($data['quantity']))
+        {
+            $sql .= " LIMIT " . (int) $data['quantity'];
+        }
+        //echo "<pre>";
+        //echo $sql;
+        //echo "</pre>";
+        $product_data = array();
+        $query = $this->db->query($sql);
+        //TOTAL PRODUCT COUNT
+        $sql="SELECT FOUND_ROWS() as  total_record";
+        $total_rows = $this->db->query($sql)->rows;
+        foreach ($query->rows as $result) {
+            $product_data[$result['product_id']] = $this->getProduct($result['product_id']);
+            $product_data[$result['product_id']]['book_count']=$result['book_count'];
+            $product_data[$result['product_id']]['min_price']=$result['min_price'];
+            $product_data[$result['product_id']]['max_price']=$result['max_price'];
+            //min_price
+        }
+        
+        
+        
+        $result= array('products'=>$product_data,'product_total'=>$total_rows[0]['total_record']);
+        return $result;
     }
 
 //	public function getProductSpecials($data = array()) {

@@ -187,7 +187,7 @@ class ControllerProductAdsattributes extends Controller
         } else
         {
             //$limit = $this->config->get('config_catalog_limit');
-            $limit = 180;
+            $limit = 100;
         }
 
         $this->data['breadcrumbs'] = array();
@@ -366,15 +366,17 @@ class ControllerProductAdsattributes extends Controller
                 'filter_description' => $filter_description,
                 'filter_groups' => $filter_groups,
                 'filter_attribute' => $filter_attribute,
-                'sort' => $sort,
-                'order' => $order,
+                'sort' => 'p.price',
+                'order' => 'asc',
                 'start' => ($page - 1) * $limit,
                 'limit' => $limit,
                 'quicksearch' => $quicksearch
             );
 
-            $product_total = $this->model_catalog_adsattributes->getTotalProducts($data);
-
+            $result = $this->model_catalog_adsattributes->getRecords($data);
+            //var_dump($result);
+            $product_total = $result['product_total'];
+            $products = $result['products'];
             //echo $product_total .'######';
             # if no products are found let give them random products
             if ($product_total < 1)
@@ -389,7 +391,10 @@ class ControllerProductAdsattributes extends Controller
                     'sort' => 'RAND()'
                 );
 
-                $product_total = $this->model_catalog_adsattributes->getTotalProducts($data);
+                $result = $this->model_catalog_adsattributes->getRecords($data);
+
+                $product_total = $result['product_total'];
+                $products = $result['products'];
             }
 
 
@@ -404,20 +409,26 @@ class ControllerProductAdsattributes extends Controller
                 'sort' => 'RAND()'
             );
 
-            $product_total = $this->model_catalog_adsattributes->getTotalProducts($data);
+            $result = $this->model_catalog_adsattributes->getRecords($data);
+
+            $product_total = $result['product_total'];
+            $products = $result['products'];
         }
 
 
-        $results = $this->model_catalog_adsattributes->getProducts($data);
+        //$results = $this->model_catalog_adsattributes->getProducts($data);
 
-        foreach ($results as $result) {
+        foreach ($products as $result) {
+
+
+            if (!isset($result['image']))
+                continue;
+
             if (EPUB_USE_AMAZON_S3 && $result['image'])
             {
                 $image = S3_COVER_URL . 'resized/' . image_resize_name(basename($result['image']), $this->config->get('config_image_product_width'));
             } else if ($result['image'] && file_exists(DIR_IMAGE . $result['image']))
             {
-                //$image = $this->model_tool_image->resize($result['image'], $this->config->get('config_image_product_width'), $this->config->get('config_image_product_height'));
-
                 $image = $this->model_tool_image->onesize($result['image'], $this->config->get('config_image_product_width'));
             } else
             {
@@ -427,6 +438,8 @@ class ControllerProductAdsattributes extends Controller
             if (($this->config->get('config_customer_price') && $this->customer->isLogged()) || !$this->config->get('config_customer_price'))
             {
                 $price = $this->currency->format($this->tax->calculate($result['price'], $result['tax_class_id'], $this->config->get('config_tax')));
+                $min_price = $this->currency->format($this->tax->calculate($result['min_price'], $result['tax_class_id'], $this->config->get('config_tax')));
+                $max_price = $this->currency->format($this->tax->calculate($result['max_price'], $result['tax_class_id'], $this->config->get('config_tax')));
             } else
             {
                 $price = false;
@@ -475,7 +488,10 @@ class ControllerProductAdsattributes extends Controller
                 'authorstring' => $authorstring,
                 'rating' => $result['rating'],
                 'reviews' => sprintf($this->language->get('text_reviews'), (int) $result['reviews']),
-                'href' => $this->url->link('product/product', $url . '&product_id=' . $result['product_id'])
+                'href' => $this->url->link('product/product', $url . '&product_id=' . $result['product_id']),
+                'book_count' => $result['book_count'],
+                'min_price' => $min_price,
+                'max_price' => $max_price,
             );
         }
 
