@@ -26,9 +26,9 @@ class ControllerProductAdsattributes extends Controller
 
         $quicksearch = false;
 
-        if (isset($_REQUEST['search']))
+        if (isset($this->request->request['search']))
         {
-            $filter_name = $_REQUEST['search'];
+            $filter_name = $this->request->request['search'];
             $filter_title = $filter_name;
             $filter_author = $filter_name;
 
@@ -41,14 +41,14 @@ class ControllerProductAdsattributes extends Controller
         }
 
 
-        if (isset($this->request->post['filter_name']))
+        if (isset($this->request->request['filter_name']) && !empty($this->request->request['filter_name']))
         {
-            $filter_name = $this->request->post['filter_name'];
+            $filter_name = $this->request->request['filter_name'];
         }
 
-        if (isset($this->request->post['filter_description']))
+        if (isset($this->request->request['filter_description']) && !empty($this->request->request['filter_description']))
         {
-            $filter_description = $this->request->post['filter_description'];
+            $filter_description = $this->request->request['filter_description'];
         } else
         {
             $filter_description = '';
@@ -58,17 +58,17 @@ class ControllerProductAdsattributes extends Controller
         if ($quicksearch == false)
         {
 
-            if (isset($this->request->post['filter_title']))
+            if (isset($this->request->request['filter_title']) && !empty($this->request->request['filter_title']))
             {
-                $filter_title = $this->request->post['filter_title'];
+                $filter_title = $this->request->request['filter_title'];
             } else
             {
                 $filter_title = '';
             }
 
-            if (isset($this->request->post['filter_author']))
+            if (isset($this->request->request['filter_author']) && !empty($this->request->request['filter_author']))
             {
-                $filter_author = $this->request->post['filter_author'];
+                $filter_author = $this->request->request['filter_author'];
             } else
             {
                 $filter_author = '';
@@ -76,81 +76,81 @@ class ControllerProductAdsattributes extends Controller
         }
 
 
-        if (isset($this->request->post['filter_isbn']))
+        if (isset($this->request->request['filter_isbn']) && !empty($this->request->request['filter_isbn']))
         {
-            $filter_isbn = $this->request->post['filter_isbn'];
+            $filter_isbn = $this->request->request['filter_isbn'];
         } else
         {
             $filter_isbn = '';
         }
 
-        if (isset($this->request->post['filter_tag']))
+        if (isset($this->request->request['filter_tag']) && !empty($this->request->request['filter_tag']))
         {
-            $filter_tag = $this->request->post['filter_tag'];
+            $filter_tag = $this->request->request['filter_tag'];
         } else
         {
             $filter_tag = '';
         }
 
-        if (isset($this->request->post['filter_manufacturer_id']))
+        if (isset($this->request->request['filter_manufacturer_id']) && !empty($this->request->request['filter_manufacturer_id']))
         {
-            $filter_manufacturer_id = $this->request->post['filter_manufacturer_id'];
+            $filter_manufacturer_id = $this->request->request['filter_manufacturer_id'];
         } else
         {
             $filter_manufacturer_id = '';
         }
 
-        if (isset($this->request->post['filter_language']))
+        if (isset($this->request->request['filter_language']) && !empty($this->request->request['filter_language']))
         {
-            $filter_language = $this->request->post['filter_language'];
+            $filter_language = $this->request->request['filter_language'];
         } else
         {
             $filter_language = '';
         }
 
-        if (isset($this->request->post['filter_category_id']))
+        if (isset($this->request->request['filter_category_id']) && !empty($this->request->request['filter_category_id']))
         {
-            $filter_category_id = $this->request->post['filter_category_id'];
+            $filter_category_id = $this->request->request['filter_category_id'];
         } else
         {
             $filter_category_id = 0;
         }
 
-        if (isset($this->request->post['filter_sub_category']))
+        if (isset($this->request->request['filter_sub_category']) && !empty($this->request->request['filter_sub_category']))
         {
-            $filter_sub_category = $this->request->post['filter_sub_category'];
+            $filter_sub_category = $this->request->request['filter_sub_category'];
         } else
         {
             $filter_sub_category = '';
         }
 
-        if (isset($this->request->post['filter_pricemin']))
+        if (isset($this->request->request['filter_pricemin']) && !empty($this->request->request['filter_pricemin']))
         {
-            $filter_pricemin = $this->request->post['filter_pricemin'];
+            $filter_pricemin = $this->request->request['filter_pricemin'];
         } else
         {
             $filter_pricemin = '';
         }
 
-        if (isset($this->request->post['filter_pricemax']))
+        if (isset($this->request->request['filter_pricemax']) && !empty($this->request->request['filter_pricemax']))
         {
-            $filter_pricemax = $this->request->post['filter_pricemax'];
+            $filter_pricemax = $this->request->request['filter_pricemax'];
         } else
         {
             $filter_pricemax = '';
         }
 
-        if (isset($this->request->post['filter_groups']))
+        if (isset($this->request->request['filter_groups']) && !empty($this->request->request['filter_groups']))
         {
-            $filter_groups = $this->request->post['filter_groups'];
+            $filter_groups = $this->request->request['filter_groups'];
         } else
         {
             $filter_groups = '';
         }
 
-        if (isset($this->request->post['filter_attribute']))
+        if (isset($this->request->request['filter_attribute']) && !empty($this->request->request['filter_attribute']))
         {
-            $filter_attribute = $this->request->post['filter_attribute'];
+            $filter_attribute = $this->request->request['filter_attribute'];
         } else
         {
             $filter_attribute = '';
@@ -333,20 +333,20 @@ class ControllerProductAdsattributes extends Controller
         $this->data['products'] = array();
 
         if (
-                isset($this->request->post['filter_name']) ||
-                isset($this->request->post['search']) ||
-                isset($this->request->post['filter_title']) ||
-                isset($this->request->post['filter_author']) ||
-                isset($this->request->post['filter_isbn']) ||
-                isset($this->request->post['filter_language']) ||
-                isset($this->request->post['filter_category_id']) ||
-                isset($this->request->post['filter_manufacturer_id']) ||
-                isset($this->request->post['filter_sub_category']) ||
-                isset($this->request->post['filter_pricemin']) ||
-                isset($this->request->post['filter_pricemax']) ||
-                isset($this->request->post['filter_description']) ||
-                isset($this->request->post['filter_groups']) ||
-                isset($this->request->post['filter_attribute']))
+                isset($this->request->request['filter_name']) ||
+                isset($this->request->request['search']) ||
+                isset($this->request->request['filter_title']) ||
+                isset($this->request->request['filter_author']) ||
+                isset($this->request->request['filter_isbn']) ||
+                isset($this->request->request['filter_language']) ||
+                isset($this->request->request['filter_category_id']) ||
+                isset($this->request->request['filter_manufacturer_id']) ||
+                isset($this->request->request['filter_sub_category']) ||
+                isset($this->request->request['filter_pricemin']) ||
+                isset($this->request->request['filter_pricemax']) ||
+                isset($this->request->request['filter_description']) ||
+                isset($this->request->request['filter_groups']) ||
+                isset($this->request->request['filter_attribute']))
         {
 
             $this->data['heading_title'] = $this->language->get('text_search');
