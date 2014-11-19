@@ -3,6 +3,112 @@
 class ModelCatalogAdsattributes extends Model
 {
 
+    public function getProductByName($name)
+    {
+        $customer_group_id = intval($this->config->get('config_customer_group_id'));
+        if ($this->customer->isLogged())
+            $customer_group_id = intval($this->customer->getCustomerGroupId());
+
+        $language = intval($this->config->get('config_language_id'));
+        $store_id = intval($this->config->get('config_store_id'));
+
+        $sql = "SELECT *, pd.name AS name, p.image, m.name AS manufacturer, 
+                                (SELECT price 
+                                 FROM " . DB_PREFIX . "product_discount pd2 
+                                 WHERE pd2.product_id = p.product_id AND 
+                                       pd2.customer_group_id = '{$customer_group_id}' AND 
+                                       pd2.quantity = '1' AND 
+                                       ((pd2.date_start = '0000-00-00' OR pd2.date_start < NOW()) AND 
+                                       (pd2.date_end = '0000-00-00' OR pd2.date_end > NOW())) 
+                                 ORDER BY pd2.priority ASC, pd2.price ASC LIMIT 1) AS discount, 
+                                 (SELECT price 
+                                  FROM " . DB_PREFIX . "product_special ps 
+                                  WHERE ps.product_id = p.product_id AND 
+                                        ps.customer_group_id = '{$customer_group_id}' AND 
+                                        ((ps.date_start = '0000-00-00' OR ps.date_start < NOW()) AND 
+                                        (ps.date_end = '0000-00-00' OR ps.date_end > NOW())) 
+                                  ORDER BY ps.priority ASC, ps.price ASC LIMIT 1) AS special, 
+                                 (SELECT points 
+                                  FROM " . DB_PREFIX . "product_reward pr 
+                                  WHERE pr.product_id = p.product_id AND 
+                                        customer_group_id = '{$customer_group_id}') AS reward, 
+                                 (SELECT ss.name 
+                                  FROM " . DB_PREFIX . "stock_status ss 
+                                  WHERE ss.stock_status_id = p.stock_status_id AND 
+                                        ss.language_id = '{$language}') AS stock_status, 
+                                 (SELECT wcd.unit 
+                                  FROM " . DB_PREFIX . "weight_class_description wcd 
+                                  WHERE p.weight_class_id = wcd.weight_class_id AND 
+                                        wcd.language_id = '{$language}') AS weight_class, 
+                                 (SELECT lcd.unit 
+                                  FROM " . DB_PREFIX . "length_class_description lcd 
+                                  WHERE p.length_class_id = lcd.length_class_id AND 
+                                        lcd.language_id = '{$language}') AS length_class, 
+                                 (SELECT AVG(rating) AS total 
+                                  FROM " . DB_PREFIX . "review r1 
+                                  WHERE r1.product_id = p.product_id AND 
+                                        r1.status = '1' 
+                                  GROUP BY r1.product_id) AS rating, 
+                                 (SELECT COUNT(*) AS total 
+                                  FROM " . DB_PREFIX . "review r2 
+                                  WHERE r2.product_id = p.product_id AND 
+                                        r2.status = '1' GROUP BY r2.product_id) AS reviews 
+                              FROM " . DB_PREFIX . "product p 
+                              LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) 
+                              LEFT JOIN " . DB_PREFIX . "product_to_store p2s ON (p.product_id = p2s.product_id) 
+                              LEFT JOIN " . DB_PREFIX . "manufacturer m ON (p.manufacturer_id = m.manufacturer_id) 
+                              WHERE pd.name = '{$name}' AND 
+                                    pd.language_id = '{$language}' AND 
+                                    p.status = '1' AND 
+                                    p.date_available <= NOW() AND 
+                                    p2s.store_id = '{$store_id}' order by p.price limit 1";
+        $query = $this->db->query($sql);
+        if ($query->num_rows)
+        {
+            return array(
+                'product_id' => $query->row['product_id'],
+                'name' => $query->row['name'],
+                'description' => $query->row['description'],
+                'meta_description' => $query->row['meta_description'],
+                'meta_keyword' => $query->row['meta_keyword'],
+                'title' => $query->row['name'],
+                'isbn' => $query->row['isbn'],
+                'sku' => $query->row['sku'],
+                'location' => $query->row['location'],
+                'quantity' => $query->row['quantity'],
+                'stock_status' => 1, //$query->row['stock_status'],
+                'image' => $query->row['image'],
+                'manufacturer_id' => $query->row['manufacturer_id'],
+                'manufacturer_id' => $query->row['manufacturer_id'],
+                'manufacturer' => $query->row['manufacturer'],
+                'price' => ($query->row['discount'] ? $query->row['discount'] : $query->row['price']),
+                'special' => 0, //$query->row['special'],
+                'reward' => $query->row['reward'],
+                'points' => $query->row['points'],
+                'tax_class_id' => $query->row['tax_class_id'],
+                'date_available' => $query->row['date_available'],
+                'weight' => $query->row['weight'],
+                'weight_class' => $query->row['weight_class'],
+                'length' => $query->row['length'],
+                'width' => $query->row['width'],
+                'height' => $query->row['height'],
+                'length_class' => $query->row['length_class'],
+                'subtract' => $query->row['subtract'],
+                'rating' => 0, //(int) $query->row['rating'],
+                'reviews' => 0, // $query->row['reviews'],
+                'minimum' => $query->row['minimum'],
+                'sort_order' => $query->row['sort_order'],
+                'status' => $query->row['status'],
+                'date_added' => $query->row['date_added'],
+                'date_modified' => $query->row['date_modified'],
+                'viewed' => $query->row['viewed']
+            );
+        } else
+        {
+            return false;
+        }
+    }
+
     public function getProduct($product_id)
     {
         if ($this->customer->isLogged())
@@ -112,6 +218,7 @@ class ModelCatalogAdsattributes extends Model
             return false;
         }
     }
+
     public function getProducts($data = array())
     {
         $customer_group_id = $this->config->get('config_customer_group_id');
@@ -303,10 +410,11 @@ class ModelCatalogAdsattributes extends Model
         foreach ($query->rows as $result) {
             $product_data[$result['product_id']] = $this->getProduct($result['product_id']);
         }
-        
+
 
         return $product_data;
     }
+
     public function getRecords($data = array())
     {
         $customer_group_id = $this->config->get('config_customer_group_id');
@@ -314,7 +422,7 @@ class ModelCatalogAdsattributes extends Model
         if ($this->customer->isLogged())
             $customer_group_id = $this->customer->getCustomerGroupId();
 
-        $sql = "SELECT SQL_CALC_FOUND_ROWS p.product_id,count(*) as book_count, min(p.price) as min_price,max(p.price) as max_price,
+        $sql = "SELECT SQL_CALC_FOUND_ROWS p.product_id,count(*) as book_count,pd.name as name ,min(p.price) as min_price,max(p.price) as max_price,
 		          (SELECT AVG(rating) AS total FROM " . DB_PREFIX . "review r1 WHERE r1.product_id = p.product_id AND r1.status = '1' GROUP BY r1.product_id) AS rating
 			    FROM " . DB_PREFIX . "product p
 			    LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id)
@@ -356,95 +464,23 @@ class ModelCatalogAdsattributes extends Model
         }
 
 
-
-
-        if (isset($data['quicksearch']) && $data['quicksearch'] == 1)
+        if (array_key_exists('filter_author', $data))
         {
-            if (strlen($data['filter_author']) > 3)
+            $search_len = strlen($data['filter_author']);
+            if ($search_len > 3)
             {
-                //$data['filter_author'] = str_ireplace(' ', ' +', $data['filter_author']);
+                if ($search_len > 10)
+                    $data['filter_author'] = str_ireplace(' ', ' +', $data['filter_author']);
 
                 $sql.=" AND MATCH(atd.name) AGAINST('+{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE) OR  MATCH(pd.name) AGAINST('+{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE)";
             } else
             {
-                $sql .= " AND ((LCASE(pd.name) LIKE '" . $this->db->escape(mb_strtolower($data['filter_author'], 'utf-8')) . "%'))";
-            }
-        } else
-        {
-
-            if (isset($data['filter_author']) && $data['filter_author'])
-            {
-                $sql.=" AND MATCH(atd.name) AGAINST('+{$this->db->escape($data['filter_author'])}' IN BOOLEAN MODE)";
-                //$sql .= " AND LCASE(atd.name) LIKE '%" . $this->db->escape(mb_strtolower($data['filter_author'], 'utf-8')) . "%'";
-            }
-
-            if (isset($data['filter_name']) && $data['filter_name'])
-            {
-                if (isset($data['filter_description']) && $data['filter_description'])
-                {
-                    $sql .= " AND MATCH(pd.name) AGAINST('+{$this->db->escape($data['filter_name'])}' IN BOOLEAN MODE)
-					    OR MATCH(pd.description) AGAINST('+{$this->db->escape($data['filter_name'])}' IN BOOLEAN MODE))";
-                } else
-                {
-                    $sql .= " AND MATCH(pd.name) AGAINST('+{$this->db->escape($data['filter_name'])}' IN BOOLEAN MODE)";
-                }
-            }
-
-            if (isset($data['filter_title']) && $data['filter_title'])
-            {
-                $sql .= " AND MATCH(pd.name) AGAINST('+{$this->db->escape($data['filter_title'])}' IN BOOLEAN MODE)";
+                if ($search_len > 0 && $search_len < 4)
+                    $sql .= " AND ((LCASE(pd.name) LIKE '" . $this->db->escape(mb_strtolower($data['filter_author'], 'utf-8')) . "%'))";
             }
         }
 
-        //=============================================
-        if (isset($data['filter_category_id']) && $data['filter_category_id'])
-        {
-            if ($data['filter_category_id'] == 0)
-                $data['filter_sub_category'] = true;
-            if ($data['filter_sub_category'] == 'true')
-            {
-                $implode_data = array();
-                $categories = $this->getCategoriesByParentId($data['filter_category_id']);
-                $implode_data = implode(',', $categories);
-            } else
-            {
-                $implode_data = implode(',', array('0' => $data['filter_category_id']));
-            }
-            //=============================================
 
-            if (isset($data['filter_category_id']) && $data['filter_category_id'])
-            {
-                $sql .= " AND p.product_id IN (SELECT p2c.product_id FROM " . DB_PREFIX . "product_to_category p2c WHERE  p2c.category_id IN(" . $implode_data . "))";
-            } else
-            {
-                $sql .= " AND p.product_id IN (SELECT p2c.product_id FROM " . DB_PREFIX . "product_to_category p2c WHERE p2c.category_id = '" . (int) $data['filter_category_id'] . "')";
-            }
-        }
-
-        if (isset($data['filter_language']) && $data['filter_language'])
-        {
-            $sql .= " AND LCASE(p.book_language) = '" . $this->db->escape(mb_strtolower($data['filter_language'], 'utf-8')) . "'";
-        }
-
-        if (isset($data['filter_isbn']) && $data['filter_isbn'])
-        {
-            $sql .= " AND LCASE(p.isbn) = '" . $this->db->escape(mb_strtolower($data['filter_isbn'], 'utf-8')) . "'";
-        }
-
-        if (isset($data['filter_pricemin']) && $data['filter_pricemin'])
-        {
-            $sql .= " AND p.price >= '" . (int) $data['filter_pricemin'] . "'";
-        }
-
-        if (isset($data['filter_pricemax']) && $data['filter_pricemax'])
-        {
-            $sql .= " AND p.price <= '" . (int) $data['filter_pricemax'] . "'";
-        }
-
-        if ($this->config->get("searchat_viewproduct") != '')
-        {
-            $sql .= " AND p.stock_status_id <> '" . (int) $this->config->get("searchat_viewproduct") . "'";
-        }
 
         $sort_data = array(
             'pd.name',
@@ -475,7 +511,7 @@ class ModelCatalogAdsattributes extends Model
         if (isset($data['order']) && ($data['order'] == 'DESC'))
         {
             $sql .= " DESC";
-        } 
+        }
 
         if (isset($data['start']) || isset($data['limit']))
         {
@@ -499,22 +535,23 @@ class ModelCatalogAdsattributes extends Model
         //echo "<pre>";
         //echo $sql;
         //echo "</pre>";
+        //exit;
         $product_data = array();
         $query = $this->db->query($sql);
         //TOTAL PRODUCT COUNT
-        $sql="SELECT FOUND_ROWS() as  total_record";
+        $sql = "SELECT FOUND_ROWS() as  total_record";
         $total_rows = $this->db->query($sql)->rows;
         foreach ($query->rows as $result) {
-            $product_data[$result['product_id']] = $this->getProduct($result['product_id']);
-            $product_data[$result['product_id']]['book_count']=$result['book_count'];
-            $product_data[$result['product_id']]['min_price']=$result['min_price'];
-            $product_data[$result['product_id']]['max_price']=$result['max_price'];
+            $product_data[$result['product_id']] = $this->getProductByName($result['name']);
+            $product_data[$result['product_id']]['book_count'] = $result['book_count'];
+            $product_data[$result['product_id']]['min_price'] = $result['min_price'];
+            $product_data[$result['product_id']]['max_price'] = $result['max_price'];
             //min_price
         }
-        
-        
-        
-        $result= array('products'=>$product_data,'product_total'=>$total_rows[0]['total_record']);
+
+
+
+        $result = array('products' => $product_data, 'product_total' => $total_rows[0]['total_record']);
         return $result;
     }
 

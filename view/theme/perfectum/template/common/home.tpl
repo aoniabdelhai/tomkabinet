@@ -6,35 +6,22 @@ $cover_pos = array("left","center","right");
 <div id="contenthome">
     <div class="headercontent">
         <div id="slogan">
-            <span class="title">E-books kopen, lezen en verkopen</span>
-            <span class="description">Verkoop je tweedehands e-books. Veilig en legaal.</span>
-        </div>
-        <div id="buttons">
-            <div class="sell">
-                <a href="index.php?route=seller/account-product/create">
-                    <img src="image/data/button_verkoop_homepage.png" />
-                    <div id="verkoopbutton">Verkoop je e-books</div>
-                </a>
-            </div>
-            <div id="slash">/</div>
-            <div id="search" class="searchblock">
-                <img src="image/data/button-searchbook-homepage.png" />
-                <form id="myformhome" method="get" action="index.php?route=product/adsattributes">
-                    <input type="text" name="search" value="Zoek e-books" autocomplete="off" onclick="this.value = ''" onblur="if (this.value == '') {
-                                this.value = 'Zoek e-books'
-                            }" />
-                    <input type="hidden" name="route" value="product/adsattributes" />
-                    <button class="search-btn button-search" title="Go" type="submit"></button>
-                </form>
-            </div>
+            <h1 class="title" style="color:#FFF;">E-books kopen, lezen en verkopen</h1>
+            <p class="description">Verkoop je tweedehands e-books. Veilig en legaal.</p>
         </div>
     </div>
-
+    <div id="search_wrap">
+        <form id="myformhome" method="get" action="index.php">
+        <input type="text" name="search" value='' placeholder="Zoek e-books"/>
+        <input type="hidden" name="route" value="product/adsattributes" />
+        <input type='submit' value='Zoek' />
+        
+        </form>
+        
+    </div>
     <div id="advanced_search"><a href="index.php?route=product/adsattributes">Geavanceerd&nbsp;zoeken&nbsp;&raquo;</a></div>
 
-    <div id="coverswrapper">
-        <div id="covers" style="background-position: top <?= $cover_pos[floor(rand(0,3))] ?>;"></div>
-    </div>
+
 
 </div>
 

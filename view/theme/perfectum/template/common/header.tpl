@@ -73,7 +73,7 @@
         <script type="text/javascript" src="catalog/view/theme/perfectum/js/jquery.prettyPhoto.js"></script>
         <script type="text/javascript" src="catalog/view/theme/perfectum/js/twitter/jquery.tweet.js"></script>
         <script type="text/javascript">var switchTo5x = true;</script>
-        <script type="text/javascript" src="http://w.sharethis.com/button/buttons.js"></script>
+        <script type="text/javascript" src="//w.sharethis.com/button/buttons.js"></script>
         <script type="text/javascript">stLight.options({publisher: "fdf72e22-4d1c-4270-9aea-a784ad6c30c2"});</script>
 
         <?php foreach ($scripts as $script): ?>
@@ -94,26 +94,7 @@
         DD_belatedPNG.fix('#logo img');
         </script>
         <![endif]-->
-
-        <?php 
-        if(!isset($stores)){
-        $stores = null;
-        }
-        ?>
-        <?php if ($stores): ?>
-        <script type="text/javascript">
-                    <!--
-          $(document).ready(function() {
-            < ?php foreach ($stores as $store): ? >
-                    $('body').prepend('<iframe src="<?php echo $store; ?>" style="display: none;"></iframe>');
-                    < ?php endforeach; ? >
-            });
-                    //-->
-        </script>
-        <?php endif; ?>
-
-
-        <?php if(($this->config->get('perfectum_status') == '1') && ($this->config->get('perfectum_slider_enable') == '1')): ?>
+     <?php if(($this->config->get('perfectum_status') == '1') && ($this->config->get('perfectum_slider_enable') == '1')): ?>
         <script type="text/javascript">
                     <!--
           $(document).ready(function() {
@@ -160,11 +141,11 @@
         <script type="text/javascript">
                     <!--
           $(document).ready(function() {
-            < ?php
-                    if (($this - > config - > get('perfectum_status') == '1')){
-            echo html_entity_decode($this - > config - > get('perfectum_custom_js'));
+            <?php
+                    if (($this->config-> get('perfectum_status') == '1')){
+            echo html_entity_decode($this->config-> get('perfectum_custom_js'));
             }
-            ? >
+            ?>
                     // Image animation
                     $(".fade-image, .box-category .menuopen, .box-category .menuclose").live({
             mouseenter:
@@ -373,7 +354,7 @@ $css_wrapper = $rt[0] .' '. str_replace('/', '_', $route);
             <div id="header_menu">
                 <div id="menucontent">
                     <ul class="ulmenu" id="ulmenuid">
-                        <li><a href="<?php echo $home; ?>"><img src="image/data/logotomkabinet.png"></a><i id="burger" class="fa fa-align-justify fa-2x"></i></li>
+                        <li><a href="/"><img src="image/data/logotomkabinet.png"></a><i id="burger" class="fa fa-align-justify fa-2x"></i></li>
                         <?php if ($categories): ?>
                         <?php foreach ($categories as $category): ?>
                         <li class="hideonmobile"><a href="<?php echo $category['href']; ?>"><?php echo $category['name']; ?></a>

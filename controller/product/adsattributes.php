@@ -2,9 +2,8 @@
 
 class ControllerProductAdsattributes extends Controller
 {
-
-    public function index()
-    {
+    
+    private function _init(){
         $this->language->load('product/adsattributes');
 
         $this->load->model('catalog/adsattributes');
@@ -12,7 +11,12 @@ class ControllerProductAdsattributes extends Controller
         //Also changed ... for each filter_name the reading of the search parameter in the form
         $this->load->model('catalog/author');
         $this->load->model('tool/image');
+    }
 
+    public function index()
+    {
+        
+        $this->_init();
         $this->document->addScript('catalog/view/javascript/jquery/jquery.total-storage.min.js');
 
         if (isset($this->request->post['keyword']))
