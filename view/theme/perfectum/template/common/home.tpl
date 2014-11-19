@@ -19,8 +19,9 @@
           <div id="slash">/</div>
           <div id="search" class="searchblock">
             <img src="image/data/button-searchbook-homepage.png" />
-            <form id="myformhome" method="post" action="index.php?route=product/adsattributes">
+            <form id="myformhome" method="GET" action="index.php">
               <input type="text" name="search" value="Zoek e-books" autocomplete="off" onclick="this.value = ''" onblur="if(this.value=='') { this.value = 'Zoek e-books'}" />
+              <input type="hidden" name="route" value="product/adsattributes" />
               <button class="search-btn button-search" title="Go" type="submit"></button>
             </form>
           </div>

@@ -2,7 +2,7 @@
   <div class="box-heading"><?php echo $heading_title; ?></div>
 <?php if ($position == 'content_top'  or $position == 'content_bottom') { ?>
   <div class="box-content" style="overflow: auto; padding-bottom:0;">
-      <form action="<?php echo $action; ?>" method="post" enctype="multipart/form-data">
+      <form action="index.php" method="GET" enctype="multipart/form-data">
       
 <!--keywords      -->
 <!--title-->
@@ -84,7 +84,7 @@
         </div>
     </div>
 <?php } ?> 
-
+        <input type="hidden" name="route" value="product/adsattributes" />
 <!--button-->
     <div class="cell-box-button">       
         <span id="loader"></span><input type="submit" value="Laat Tom voor je zoeken" class="det_button" />
